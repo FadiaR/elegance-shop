@@ -7,14 +7,24 @@ import ProductForm from './components/ProductForm';
 import ProductTable from './components/ProductTable';
 import SettingsPage from './components/SettingsPage';
 import type { Product } from './types';
+import { PackageSearch } from 'lucide-react';
 
 export default function App() {
-  const { products, settings, addProduct, updateProduct, deleteProduct, updateSettings } =
+  const { products, settings, loading, addProduct, updateProduct, deleteProduct, updateSettings } =
     useStore();
   const [editProduct, setEditProduct] = useState<Product | null>(null);
 
   const brands = [...new Set(products.map((p) => p.brand))].filter(Boolean).sort();
   const categories = [...new Set(products.map((p) => p.category))].filter(Boolean).sort();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center gap-3">
+        <PackageSearch className="w-12 h-12 text-violet-600 animate-pulse" />
+        <p className="text-gray-500 text-sm">Chargement...</p>
+      </div>
+    );
+  }
 
   return (
     <HashRouter>
