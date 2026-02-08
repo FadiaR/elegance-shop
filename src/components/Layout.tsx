@@ -5,6 +5,8 @@ import {
   PackageSearch,
   Settings,
 } from 'lucide-react';
+import type { StockNotification } from '../types';
+import NotificationPanel from './NotificationPanel';
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Tableau de bord' },
@@ -13,13 +15,26 @@ const navItems = [
   { to: '/settings', icon: Settings, label: 'Reglages' },
 ];
 
-export default function Layout() {
+interface Props {
+  notifications: StockNotification[];
+  onMarkRead: (id: string) => void;
+  onMarkAllRead: () => void;
+  onClearAll: () => void;
+}
+
+export default function Layout({ notifications, onMarkRead, onMarkAllRead, onClearAll }: Props) {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Top bar */}
       <header className="bg-violet-700 text-white px-4 py-3 flex items-center gap-3 shadow-md">
         <PackageSearch className="w-7 h-7" />
-        <h1 className="text-lg font-bold tracking-wide">Elegance Shop</h1>
+        <h1 className="text-lg font-bold tracking-wide flex-1">Elegance Shop</h1>
+        <NotificationPanel
+          notifications={notifications}
+          onMarkRead={onMarkRead}
+          onMarkAllRead={onMarkAllRead}
+          onClearAll={onClearAll}
+        />
       </header>
 
       {/* Main content */}

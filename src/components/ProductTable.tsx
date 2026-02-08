@@ -11,6 +11,7 @@ import {
   Trash2,
   Filter,
   Package,
+  User,
 } from 'lucide-react';
 
 interface Props {
@@ -256,6 +257,15 @@ export default function ProductTable({
                       <p className="text-xs text-gray-500 mt-0.5 truncate">
                         {product.description}
                       </p>
+                    )}
+
+                    {(product.addedBy || product.lastModifiedBy) && (
+                      <div className="flex items-center gap-1 mt-0.5">
+                        <User className="w-3 h-3 text-gray-400" />
+                        <span className="text-[10px] text-gray-400">
+                          {product.lastModifiedBy || product.addedBy}
+                        </span>
+                      </div>
                     )}
 
                     {/* Prices */}

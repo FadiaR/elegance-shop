@@ -8,8 +8,23 @@ export interface Product {
   quantity: number;
   purchasePrice: number; // EUR
   sellingPrice: number; // EUR
+  addedBy?: string;
+  lastModifiedBy?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface StockNotification {
+  id: string;
+  type: 'stock_added' | 'stock_updated' | 'stock_deleted';
+  productName: string;
+  productId: string;
+  previousQuantity?: number;
+  newQuantity?: number;
+  userName: string;
+  message: string;
+  createdAt: string;
+  read: boolean;
 }
 
 export interface AppSettings {
