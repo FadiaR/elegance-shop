@@ -4,7 +4,7 @@ import { exportProductsToCSV } from '../utils/csv';
 import {
   Package,
   TrendingUp,
-  AlertTriangle,
+
   Download,
   Euro,
   DollarSign,
@@ -24,10 +24,7 @@ export default function Dashboard({ products, settings }: Props) {
   const totalSellingEur = products.reduce((s, p) => s + p.sellingPrice * p.quantity, 0);
   const totalProfitEur = totalSellingEur - totalPurchaseEur;
   const totalProfitDzd = totalProfitEur * settings.exchangeRate;
-  const lowStockProducts = products.filter(
-    (p) => p.quantity > 0 && p.quantity <= settings.lowStockThreshold,
-  );
-  const outOfStockProducts = products.filter((p) => p.quantity === 0);
+
 
   const brands = [...new Set(products.map((p) => p.brand))].filter(Boolean);
 
@@ -97,37 +94,6 @@ export default function Dashboard({ products, settings }: Props) {
           Taux: 1 EUR = {settings.exchangeRate.toFixed(2)} DZD
         </div>
       </div>
-
-      {/* Alerts */}
-      {(lowStockProducts.length > 0 || outOfStockProducts.length > 0) && (
-        <div className="space-y-2">
-          <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
-            Alertes stock
-          </h3>
-          {outOfStockProducts.map((p) => (
-            <div
-              key={p.id}
-              className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-sm"
-            >
-              <AlertTriangle className="w-4 h-4 text-red-500 shrink-0" />
-              <span className="text-red-700 font-medium">{p.name}</span>
-              <span className="text-red-500 ml-auto">Rupture de stock</span>
-            </div>
-          ))}
-          {lowStockProducts.map((p) => (
-            <div
-              key={p.id}
-              className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-sm"
-            >
-              <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
-              <span className="text-amber-700 font-medium">{p.name}</span>
-              <span className="text-amber-500 ml-auto">
-                Stock faible ({p.quantity})
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
 
       {/* Top profitable products */}
       {topProfitProducts.length > 0 && (
