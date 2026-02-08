@@ -7,6 +7,7 @@ import ProductForm from './components/ProductForm';
 import ProductTable from './components/ProductTable';
 import SettingsPage from './components/SettingsPage';
 import UserNameModal from './components/UserNameModal';
+import SaleModal from './components/SaleModal';
 import type { Product } from './types';
 import { PackageSearch } from 'lucide-react';
 
@@ -15,16 +16,19 @@ export default function App() {
     products,
     settings,
     notifications,
+    sales,
     loading,
     addProduct,
     updateProduct,
     deleteProduct,
+    recordSale,
     updateSettings,
     markNotificationRead,
     markAllNotificationsRead,
     clearAllNotifications,
   } = useStore();
   const [editProduct, setEditProduct] = useState<Product | null>(null);
+  const [saleProduct, setSaleProduct] = useState<Product | null>(null);
   const [showNameModal, setShowNameModal] = useState(!getStoredUsername());
 
   const brands = [...new Set(products.map((p) => p.brand))].filter(Boolean).sort();
@@ -49,6 +53,17 @@ export default function App() {
           }}
         />
       )}
+      {saleProduct && (
+        <SaleModal
+          product={saleProduct}
+          settings={settings}
+          onConfirm={(productId, quantity, actualPrice) => {
+            recordSale(productId, quantity, actualPrice);
+            setSaleProduct(null);
+          }}
+          onClose={() => setSaleProduct(null)}
+        />
+      )}
       <HashRouter>
         <Routes>
           <Route
@@ -63,7 +78,7 @@ export default function App() {
           >
             <Route
               index
-              element={<Dashboard products={products} settings={settings} />}
+              element={<Dashboard products={products} sales={sales} settings={settings} />}
             />
             <Route
               path="products"
@@ -73,6 +88,7 @@ export default function App() {
                   settings={settings}
                   onDelete={deleteProduct}
                   onEdit={(product) => setEditProduct(product)}
+                  onSell={(product) => setSaleProduct(product)}
                 />
               }
             />

@@ -14,9 +14,24 @@ export interface Product {
   updatedAt: string;
 }
 
+export interface Sale {
+  id: string;
+  productId: string;
+  productName: string;
+  brand: string;
+  quantity: number;
+  purchasePrice: number; // cost per unit (EUR)
+  listedPrice: number; // prix affiché par unite (EUR)
+  actualPrice: number; // prix de vente reel par unite (EUR)
+  potentialProfit: number; // (listedPrice - purchasePrice) * quantity
+  realProfit: number; // (actualPrice - purchasePrice) * quantity
+  soldBy: string;
+  createdAt: string;
+}
+
 export interface StockNotification {
   id: string;
-  type: 'stock_added' | 'stock_updated' | 'stock_deleted';
+  type: 'stock_added' | 'stock_updated' | 'stock_deleted' | 'product_sold';
   productName: string;
   productId: string;
   previousQuantity?: number;

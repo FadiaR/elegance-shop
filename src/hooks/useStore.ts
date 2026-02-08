@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import type { Product, AppSettings, StockNotification } from '../types';
+import type { Product, AppSettings, StockNotification, Sale } from '../types';
 import { db } from '../firebase';
 import { ref, onValue, set, remove } from 'firebase/database';
 import { v4 as uuidv4 } from 'uuid';
@@ -23,6 +23,7 @@ export function useStore() {
   const [products, setProducts] = useState<Product[]>([]);
   const [settings, setSettingsState] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [notifications, setNotifications] = useState<StockNotification[]>([]);
+  const [sales, setSales] = useState<Sale[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Real-time sync: listen to products
@@ -64,6 +65,22 @@ export function useStore() {
         setNotifications(list);
       } else {
         setNotifications([]);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Real-time sync: listen to sales
+  useEffect(() => {
+    const salesRef = ref(db, 'sales');
+    const unsubscribe = onValue(salesRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const list: Sale[] = Object.values(data);
+        list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        setSales(list);
+      } else {
+        setSales([]);
       }
     });
     return () => unsubscribe();
@@ -139,6 +156,48 @@ export function useStore() {
     });
   }, [addNotification, products]);
 
+  const recordSale = useCallback((productId: string, quantity: number, actualPrice: number) => {
+    const userName = getStoredUsername() || 'Inconnu';
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+
+    const id = uuidv4();
+    const sale: Sale = {
+      id,
+      productId,
+      productName: product.name,
+      brand: product.brand,
+      quantity,
+      purchasePrice: product.purchasePrice,
+      listedPrice: product.sellingPrice,
+      actualPrice,
+      potentialProfit: (product.sellingPrice - product.purchasePrice) * quantity,
+      realProfit: (actualPrice - product.purchasePrice) * quantity,
+      soldBy: userName,
+      createdAt: new Date().toISOString(),
+    };
+    set(ref(db, `sales/${id}`), sale);
+
+    // Decrease stock
+    const newQty = Math.max(0, product.quantity - quantity);
+    set(ref(db, `products/${productId}`), {
+      ...product,
+      quantity: newQty,
+      lastModifiedBy: userName,
+      updatedAt: new Date().toISOString(),
+    });
+
+    addNotification({
+      type: 'product_sold',
+      productName: product.name,
+      productId,
+      previousQuantity: product.quantity,
+      newQuantity: newQty,
+      userName,
+      message: `${userName} a vendu ${quantity}x "${product.name}" a ${actualPrice.toFixed(2)} EUR/u`,
+    });
+  }, [products, addNotification]);
+
   const updateSettings = useCallback((newSettings: AppSettings) => {
     set(ref(db, 'settings'), newSettings);
   }, []);
@@ -163,10 +222,12 @@ export function useStore() {
     products,
     settings,
     notifications,
+    sales,
     loading,
     addProduct,
     updateProduct,
     deleteProduct,
+    recordSale,
     updateSettings,
     markNotificationRead,
     markAllNotificationsRead,

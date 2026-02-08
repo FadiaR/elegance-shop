@@ -10,6 +10,7 @@ import {
   Trash,
   User,
   Clock,
+  ShoppingCart,
 } from 'lucide-react';
 
 interface Props {
@@ -51,6 +52,8 @@ export default function NotificationPanel({
         return <PackageCheck className="w-4 h-4 text-blue-600" />;
       case 'stock_deleted':
         return <Trash2 className="w-4 h-4 text-red-600" />;
+      case 'product_sold':
+        return <ShoppingCart className="w-4 h-4 text-orange-600" />;
     }
   };
 
@@ -63,6 +66,8 @@ export default function NotificationPanel({
         return 'bg-blue-50';
       case 'stock_deleted':
         return 'bg-red-50';
+      case 'product_sold':
+        return 'bg-orange-50';
     }
   };
 

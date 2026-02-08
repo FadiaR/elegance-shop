@@ -1,30 +1,36 @@
-import type { Product, AppSettings } from '../types';
+import type { Product, AppSettings, Sale } from '../types';
 import { formatEUR, formatDZD } from '../utils/format';
 import { exportProductsToCSV } from '../utils/csv';
 import {
   Package,
   TrendingUp,
-
   Download,
   Euro,
   DollarSign,
   ShoppingBag,
   BarChart3,
+  ShoppingCart,
+  User,
+  Clock,
 } from 'lucide-react';
 
 interface Props {
   products: Product[];
+  sales: Sale[];
   settings: AppSettings;
 }
 
-export default function Dashboard({ products, settings }: Props) {
+export default function Dashboard({ products, sales, settings }: Props) {
   const totalProducts = products.length;
   const totalQuantity = products.reduce((s, p) => s + p.quantity, 0);
   const totalPurchaseEur = products.reduce((s, p) => s + p.purchasePrice * p.quantity, 0);
   const totalSellingEur = products.reduce((s, p) => s + p.sellingPrice * p.quantity, 0);
-  const totalProfitEur = totalSellingEur - totalPurchaseEur;
-  const totalProfitDzd = totalProfitEur * settings.exchangeRate;
+  const potentialProfitEur = totalSellingEur - totalPurchaseEur;
 
+  // Real profit from sales
+  const totalRealProfit = sales.reduce((s, sale) => s + sale.realProfit, 0);
+  const totalSalesRevenue = sales.reduce((s, sale) => s + sale.actualPrice * sale.quantity, 0);
+  const totalSoldItems = sales.reduce((s, sale) => s + sale.quantity, 0);
 
   const brands = [...new Set(products.map((p) => p.brand))].filter(Boolean);
 
@@ -35,6 +41,23 @@ export default function Dashboard({ products, settings }: Props) {
       return profitB - profitA;
     })
     .slice(0, 5);
+
+  const recentSales = sales.slice(0, 5);
+
+  const formatTime = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMin = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMin / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffMin < 1) return "A l'instant";
+    if (diffMin < 60) return `${diffMin} min`;
+    if (diffHours < 24) return `${diffHours}h`;
+    if (diffDays < 7) return `${diffDays}j`;
+    return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+  };
 
   return (
     <div className="p-4 space-y-5">
@@ -74,26 +97,87 @@ export default function Dashboard({ products, settings }: Props) {
           color="bg-green-50 border-green-200"
         />
         <StatCard
-          icon={<DollarSign className="w-5 h-5 text-emerald-600" />}
-          label="Valeur vente"
-          value={formatEUR(totalSellingEur)}
-          sub={formatDZD(totalSellingEur * settings.exchangeRate)}
-          color="bg-emerald-50 border-emerald-200"
+          icon={<ShoppingCart className="w-5 h-5 text-orange-600" />}
+          label="Ventes"
+          value={`${totalSoldItems} vendus`}
+          sub={`${sales.length} transactions`}
+          color="bg-orange-50 border-orange-200"
         />
       </div>
 
-      {/* Profit banner */}
-      <div className="bg-gradient-to-r from-violet-600 to-purple-600 rounded-xl p-4 text-white shadow-lg">
-        <div className="flex items-center gap-2 mb-1">
-          <TrendingUp className="w-5 h-5" />
-          <span className="font-semibold">Benefice potentiel total</span>
+      {/* Profit banners */}
+      <div className="space-y-3">
+        {/* Potential profit */}
+        <div className="bg-gradient-to-r from-violet-600 to-purple-600 rounded-xl p-4 text-white shadow-lg">
+          <div className="flex items-center gap-2 mb-1">
+            <TrendingUp className="w-5 h-5" />
+            <span className="font-semibold">Benefice potentiel (stock)</span>
+          </div>
+          <div className="text-2xl font-bold">{formatEUR(potentialProfitEur)}</div>
+          <div className="text-violet-200 text-sm">{formatDZD(potentialProfitEur * settings.exchangeRate)}</div>
+          <div className="text-violet-200 text-xs mt-1">
+            Base sur les prix affiches du stock restant
+          </div>
         </div>
-        <div className="text-2xl font-bold">{formatEUR(totalProfitEur)}</div>
-        <div className="text-violet-200 text-sm">{formatDZD(totalProfitDzd)}</div>
-        <div className="text-violet-200 text-xs mt-1">
-          Taux: 1 EUR = {settings.exchangeRate.toFixed(2)} DZD
+
+        {/* Real profit */}
+        <div className={`rounded-xl p-4 text-white shadow-lg ${
+          totalRealProfit >= 0
+            ? 'bg-gradient-to-r from-green-600 to-emerald-600'
+            : 'bg-gradient-to-r from-red-600 to-rose-600'
+        }`}>
+          <div className="flex items-center gap-2 mb-1">
+            <DollarSign className="w-5 h-5" />
+            <span className="font-semibold">Benefice reel (ventes)</span>
+          </div>
+          <div className="text-2xl font-bold">{formatEUR(totalRealProfit)}</div>
+          <div className="text-white/70 text-sm">{formatDZD(totalRealProfit * settings.exchangeRate)}</div>
+          <div className="text-white/70 text-xs mt-1">
+            Chiffre d'affaires: {formatEUR(totalSalesRevenue)}
+          </div>
         </div>
       </div>
+
+      {/* Recent sales */}
+      {recentSales.length > 0 && (
+        <div className="space-y-2">
+          <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide flex items-center gap-2">
+            <ShoppingCart className="w-4 h-4" />
+            Dernieres ventes
+          </h3>
+          <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
+            {recentSales.map((sale) => (
+              <div key={sale.id} className="px-3 py-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-gray-800 truncate">
+                      {sale.quantity}x {sale.productName}
+                    </div>
+                    <div className="flex items-center gap-3 text-xs text-gray-400 mt-0.5">
+                      <span className="flex items-center gap-1">
+                        <User className="w-3 h-3" />
+                        {sale.soldBy}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {formatTime(sale.createdAt)}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-right ml-3">
+                    <div className={`text-sm font-bold ${sale.realProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {sale.realProfit >= 0 ? '+' : ''}{formatEUR(sale.realProfit)}
+                    </div>
+                    <div className="text-xs text-gray-400">
+                      {formatEUR(sale.actualPrice)}/u
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Top profitable products */}
       {topProfitProducts.length > 0 && (

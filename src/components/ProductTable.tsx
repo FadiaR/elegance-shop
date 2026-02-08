@@ -12,6 +12,7 @@ import {
   Filter,
   Package,
   User,
+  ShoppingCart,
 } from 'lucide-react';
 
 interface Props {
@@ -19,6 +20,7 @@ interface Props {
   settings: AppSettings;
   onDelete: (id: string) => void;
   onEdit: (product: Product) => void;
+  onSell: (product: Product) => void;
 }
 
 export default function ProductTable({
@@ -26,6 +28,7 @@ export default function ProductTable({
   settings,
   onDelete,
   onEdit,
+  onSell,
 }: Props) {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
@@ -305,6 +308,14 @@ export default function ProductTable({
 
                 {/* Actions */}
                 <div className="flex border-t border-gray-100">
+                  <button
+                    onClick={() => onSell(product)}
+                    disabled={product.quantity === 0}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2 text-xs text-green-600 hover:bg-green-50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    <ShoppingCart className="w-3.5 h-3.5" />
+                    Vendre
+                  </button>
                   <button
                     onClick={() => {
                       onEdit(product);
