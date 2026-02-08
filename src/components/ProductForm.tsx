@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Product } from '../types';
-import { Camera, X, Save, ArrowLeft } from 'lucide-react';
+import { Camera, ImagePlus, X, Save, ArrowLeft } from 'lucide-react';
 
 interface Props {
   onSave: (data: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => void;
@@ -19,7 +19,8 @@ export default function ProductForm({
   existingCategories,
 }: Props) {
   const navigate = useNavigate();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
   const isEditing = !!editProduct;
 
   const [name, setName] = useState('');
@@ -134,7 +135,14 @@ export default function ProductForm({
             type="file"
             accept="image/*"
             capture="environment"
-            ref={fileInputRef}
+            ref={cameraInputRef}
+            onChange={handlePhotoChange}
+            className="hidden"
+          />
+          <input
+            type="file"
+            accept="image/*"
+            ref={galleryInputRef}
             onChange={handlePhotoChange}
             className="hidden"
           />
@@ -154,14 +162,24 @@ export default function ProductForm({
               </button>
             </div>
           ) : (
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="w-full h-36 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center gap-2 text-gray-400 hover:border-violet-400 hover:text-violet-500 transition-colors"
-            >
-              <Camera className="w-8 h-8" />
-              <span className="text-sm">Ajouter une photo</span>
-            </button>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => cameraInputRef.current?.click()}
+                className="h-28 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center gap-2 text-gray-400 hover:border-violet-400 hover:text-violet-500 transition-colors"
+              >
+                <Camera className="w-7 h-7" />
+                <span className="text-xs">Prendre une photo</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => galleryInputRef.current?.click()}
+                className="h-28 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center gap-2 text-gray-400 hover:border-violet-400 hover:text-violet-500 transition-colors"
+              >
+                <ImagePlus className="w-7 h-7" />
+                <span className="text-xs">Choisir depuis mes photos</span>
+              </button>
+            </div>
           )}
         </div>
 
