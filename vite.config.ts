@@ -4,12 +4,13 @@ import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  base: '/elegance-shop/',
   plugins: [
     react(),
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
+      includeAssets: ['favicon.svg'],
       manifest: {
         name: 'Elegance Shop - Gestion Stock',
         short_name: 'Elegance Shop',
@@ -18,7 +19,8 @@ export default defineConfig({
         background_color: '#f5f3ff',
         display: 'standalone',
         orientation: 'any',
-        start_url: '/',
+        start_url: './',
+        scope: './',
         icons: [
           {
             src: 'pwa-192x192.png',

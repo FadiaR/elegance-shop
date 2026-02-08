@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { HashRouter, Routes, Route } from 'react-router-dom';
 import { useStore } from './hooks/useStore';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
@@ -17,7 +17,7 @@ export default function App() {
   const categories = [...new Set(products.map((p) => p.category))].filter(Boolean).sort();
 
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Routes>
         <Route element={<Layout />}>
           <Route
@@ -55,6 +55,6 @@ export default function App() {
           />
         </Route>
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
