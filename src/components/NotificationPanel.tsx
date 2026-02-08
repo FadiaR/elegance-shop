@@ -11,6 +11,7 @@ import {
   User,
   Clock,
   ShoppingCart,
+  Tag,
 } from 'lucide-react';
 
 interface Props {
@@ -54,6 +55,8 @@ export default function NotificationPanel({
         return <Trash2 className="w-4 h-4 text-red-600" />;
       case 'product_sold':
         return <ShoppingCart className="w-4 h-4 text-orange-600" />;
+      case 'price_changed':
+        return <Tag className="w-4 h-4 text-purple-600" />;
     }
   };
 
@@ -68,6 +71,8 @@ export default function NotificationPanel({
         return 'bg-red-50';
       case 'product_sold':
         return 'bg-orange-50';
+      case 'price_changed':
+        return 'bg-purple-50';
     }
   };
 

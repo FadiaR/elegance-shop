@@ -125,22 +125,42 @@ export function useStore() {
 
   const updateProduct = useCallback((updated: Product) => {
     const userName = getStoredUsername() || 'Inconnu';
+    const existing = products.find(p => p.id === updated.id);
     const product = {
       ...updated,
       lastModifiedBy: userName,
       updatedAt: new Date().toISOString(),
     };
     set(ref(db, `products/${updated.id}`), product);
-    addNotification({
-      type: 'stock_updated',
-      productName: updated.name,
-      productId: updated.id,
-      previousQuantity: undefined,
-      newQuantity: updated.quantity,
-      userName,
-      message: `${userName} a modifié "${updated.name}" (qté: ${updated.quantity})`,
-    });
-  }, [addNotification]);
+
+    // Detect price changes
+    if (existing && (existing.purchasePrice !== updated.purchasePrice || existing.sellingPrice !== updated.sellingPrice)) {
+      const changes: string[] = [];
+      if (existing.purchasePrice !== updated.purchasePrice) {
+        changes.push(`achat: ${existing.purchasePrice.toFixed(2)} -> ${updated.purchasePrice.toFixed(2)} EUR`);
+      }
+      if (existing.sellingPrice !== updated.sellingPrice) {
+        changes.push(`vente: ${existing.sellingPrice.toFixed(2)} -> ${updated.sellingPrice.toFixed(2)} EUR`);
+      }
+      addNotification({
+        type: 'price_changed',
+        productName: updated.name,
+        productId: updated.id,
+        userName,
+        message: `${userName} a modifié les prix de "${updated.name}" (${changes.join(', ')})`,
+      });
+    } else {
+      addNotification({
+        type: 'stock_updated',
+        productName: updated.name,
+        productId: updated.id,
+        previousQuantity: existing?.quantity,
+        newQuantity: updated.quantity,
+        userName,
+        message: `${userName} a modifié "${updated.name}" (qté: ${updated.quantity})`,
+      });
+    }
+  }, [addNotification, products]);
 
   const deleteProduct = useCallback((id: string) => {
     const userName = getStoredUsername() || 'Inconnu';
