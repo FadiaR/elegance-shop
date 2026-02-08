@@ -13,6 +13,7 @@ import {
   Package,
   User,
   ShoppingCart,
+  Truck,
 } from 'lucide-react';
 
 interface Props {
@@ -70,13 +71,11 @@ export default function ProductTable({
           return dir * (a.purchasePrice - b.purchasePrice);
         case 'sellingPrice':
           return dir * (a.sellingPrice - b.sellingPrice);
-        case 'profit':
-          return (
-            dir *
-            (a.sellingPrice -
-              a.purchasePrice -
-              (b.sellingPrice - b.purchasePrice))
-          );
+        case 'profit': {
+          const profitA = a.sellingPrice - a.purchasePrice - (a.shippingCost || 0);
+          const profitB = b.sellingPrice - b.purchasePrice - (b.shippingCost || 0);
+          return dir * (profitA - profitB);
+        }
         default:
           return 0;
       }
@@ -101,9 +100,9 @@ export default function ProductTable({
 
   // Totals
   const totalQty = filtered.reduce((s, p) => s + p.quantity, 0);
-  const totalPurchaseEur = filtered.reduce((s, p) => s + p.purchasePrice * p.quantity, 0);
+  const totalCostEur = filtered.reduce((s, p) => s + (p.purchasePrice + (p.shippingCost || 0)) * p.quantity, 0);
   const totalSellingEur = filtered.reduce((s, p) => s + p.sellingPrice * p.quantity, 0);
-  const totalProfitEur = totalSellingEur - totalPurchaseEur;
+  const totalProfitEur = totalSellingEur - totalCostEur;
   const totalProfitDzd = totalProfitEur * settings.exchangeRate;
 
   const handleDelete = (id: string) => {
@@ -210,7 +209,8 @@ export default function ProductTable({
       ) : (
         <div className="space-y-3">
           {filtered.map((product) => {
-            const profitUnit = product.sellingPrice - product.purchasePrice;
+            const totalCostUnit = product.purchasePrice + (product.shippingCost || 0);
+            const profitUnit = product.sellingPrice - totalCostUnit;
 
             return (
               <div
@@ -262,14 +262,24 @@ export default function ProductTable({
                       </p>
                     )}
 
-                    {(product.addedBy || product.lastModifiedBy) && (
-                      <div className="flex items-center gap-1 mt-0.5">
-                        <User className="w-3 h-3 text-gray-400" />
-                        <span className="text-[10px] text-gray-400">
-                          {product.lastModifiedBy || product.addedBy}
+                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                      {(product.addedBy || product.lastModifiedBy) && (
+                        <span className="flex items-center gap-1">
+                          <User className="w-3 h-3 text-gray-400" />
+                          <span className="text-[10px] text-gray-400">
+                            {product.lastModifiedBy || product.addedBy}
+                          </span>
                         </span>
-                      </div>
-                    )}
+                      )}
+                      {!!product.shippingCost && (
+                        <span className="flex items-center gap-1">
+                          <Truck className="w-3 h-3 text-gray-400" />
+                          <span className="text-[10px] text-gray-400">
+                            {formatEUR(product.shippingCost)}
+                          </span>
+                        </span>
+                      )}
+                    </div>
 
                     {/* Prices */}
                     <div className="grid grid-cols-3 gap-2 mt-2 text-xs">
@@ -352,12 +362,12 @@ export default function ProductTable({
           </h3>
           <div className="grid grid-cols-3 gap-3 text-sm">
             <div>
-              <span className="text-gray-400 text-xs">Total Achat</span>
+              <span className="text-gray-400 text-xs">Cout total</span>
               <div className="font-semibold text-gray-800">
-                {formatEUR(totalPurchaseEur)}
+                {formatEUR(totalCostEur)}
               </div>
               <div className="text-xs text-gray-400">
-                {formatDZD(totalPurchaseEur * settings.exchangeRate)}
+                {formatDZD(totalCostEur * settings.exchangeRate)}
               </div>
             </div>
             <div>

@@ -8,8 +8,10 @@ export function exportProductsToCSV(products: Product[], exchangeRate: number): 
     'Categorie',
     'Quantite',
     'Prix Achat (EUR)',
+    'Frais Transport (EUR)',
+    'Cout Total (EUR)',
     'Prix Vente (EUR)',
-    'Prix Achat (DZD)',
+    'Cout Total (DZD)',
     'Prix Vente (DZD)',
     'Benefice (EUR)',
     'Benefice (DZD)',
@@ -18,7 +20,9 @@ export function exportProductsToCSV(products: Product[], exchangeRate: number): 
   ];
 
   const rows = products.map((p) => {
-    const profitEur = p.sellingPrice - p.purchasePrice;
+    const shipping = p.shippingCost || 0;
+    const totalCost = p.purchasePrice + shipping;
+    const profitEur = p.sellingPrice - totalCost;
     const profitDzd = profitEur * exchangeRate;
     return [
       `"${p.name}"`,
@@ -27,8 +31,10 @@ export function exportProductsToCSV(products: Product[], exchangeRate: number): 
       `"${p.category}"`,
       p.quantity,
       p.purchasePrice.toFixed(2),
+      shipping.toFixed(2),
+      totalCost.toFixed(2),
       p.sellingPrice.toFixed(2),
-      (p.purchasePrice * exchangeRate).toFixed(2),
+      (totalCost * exchangeRate).toFixed(2),
       (p.sellingPrice * exchangeRate).toFixed(2),
       profitEur.toFixed(2),
       profitDzd.toFixed(2),
@@ -37,9 +43,9 @@ export function exportProductsToCSV(products: Product[], exchangeRate: number): 
     ].join(';');
   });
 
-  const totalPurchaseEur = products.reduce((s, p) => s + p.purchasePrice * p.quantity, 0);
+  const totalCostEur = products.reduce((s, p) => s + (p.purchasePrice + (p.shippingCost || 0)) * p.quantity, 0);
   const totalSellingEur = products.reduce((s, p) => s + p.sellingPrice * p.quantity, 0);
-  const totalProfitEur = totalSellingEur - totalPurchaseEur;
+  const totalProfitEur = totalSellingEur - totalCostEur;
 
   rows.push('');
   rows.push(
@@ -49,9 +55,11 @@ export function exportProductsToCSV(products: Product[], exchangeRate: number): 
       '',
       '',
       products.reduce((s, p) => s + p.quantity, 0),
-      totalPurchaseEur.toFixed(2),
+      '',
+      '',
+      totalCostEur.toFixed(2),
       totalSellingEur.toFixed(2),
-      (totalPurchaseEur * exchangeRate).toFixed(2),
+      (totalCostEur * exchangeRate).toFixed(2),
       (totalSellingEur * exchangeRate).toFixed(2),
       totalProfitEur.toFixed(2),
       (totalProfitEur * exchangeRate).toFixed(2),

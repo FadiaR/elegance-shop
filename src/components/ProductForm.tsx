@@ -31,6 +31,7 @@ export default function ProductForm({
   const [quantity, setQuantity] = useState(1);
   const [purchasePrice, setPurchasePrice] = useState(0);
   const [sellingPrice, setSellingPrice] = useState(0);
+  const [shippingCost, setShippingCost] = useState(0);
 
   useEffect(() => {
     if (editProduct) {
@@ -42,6 +43,7 @@ export default function ProductForm({
       setQuantity(editProduct.quantity);
       setPurchasePrice(editProduct.purchasePrice);
       setSellingPrice(editProduct.sellingPrice);
+      setShippingCost(editProduct.shippingCost || 0);
     }
   }, [editProduct]);
 
@@ -87,6 +89,7 @@ export default function ProductForm({
       quantity,
       purchasePrice,
       sellingPrice,
+      shippingCost: shippingCost || undefined,
     };
 
     if (isEditing && onUpdate && editProduct) {
@@ -107,6 +110,7 @@ export default function ProductForm({
     setQuantity(1);
     setPurchasePrice(0);
     setSellingPrice(0);
+    setShippingCost(0);
 
     navigate('/products');
   };
@@ -305,25 +309,57 @@ export default function ProductForm({
           </div>
         </div>
 
+        {/* Shipping cost */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Frais de transport (EUR)
+          </label>
+          <input
+            type="number"
+            value={shippingCost || ''}
+            onChange={(e) =>
+              setShippingCost(Math.max(0, parseFloat(e.target.value) || 0))
+            }
+            min={0}
+            step={0.01}
+            className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none text-gray-800"
+            placeholder="0.00 (optionnel)"
+          />
+          <p className="text-xs text-gray-400 mt-1">
+            Laisser vide ou a 0 s'il n'y a pas de frais de transport
+          </p>
+        </div>
+
         {/* Profit preview */}
-        {purchasePrice > 0 && sellingPrice > 0 && (
-          <div
-            className={`rounded-lg p-3 text-sm ${
-              sellingPrice > purchasePrice
-                ? 'bg-green-50 border border-green-200 text-green-700'
-                : 'bg-red-50 border border-red-200 text-red-700'
-            }`}
-          >
-            Benefice unitaire :{' '}
-            <span className="font-bold">
-              {(sellingPrice - purchasePrice).toFixed(2)} EUR
-            </span>
-            {' | Marge : '}
-            <span className="font-bold">
-              {((((sellingPrice - purchasePrice) / purchasePrice) * 100) || 0).toFixed(1)}%
-            </span>
-          </div>
-        )}
+        {purchasePrice > 0 && sellingPrice > 0 && (() => {
+          const totalCost = purchasePrice + (shippingCost || 0);
+          const profit = sellingPrice - totalCost;
+          return (
+            <div
+              className={`rounded-lg p-3 text-sm ${
+                profit > 0
+                  ? 'bg-green-50 border border-green-200 text-green-700'
+                  : 'bg-red-50 border border-red-200 text-red-700'
+              }`}
+            >
+              <div>
+                Benefice unitaire :{' '}
+                <span className="font-bold">
+                  {profit.toFixed(2)} EUR
+                </span>
+                {' | Marge : '}
+                <span className="font-bold">
+                  {(((profit / totalCost) * 100) || 0).toFixed(1)}%
+                </span>
+              </div>
+              {shippingCost > 0 && (
+                <div className="text-xs mt-1 opacity-75">
+                  Cout total: {totalCost.toFixed(2)} EUR (achat + transport)
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         <button
           type="submit"

@@ -14,8 +14,9 @@ export default function SaleModal({ product, settings, onConfirm, onClose }: Pro
   const [quantity, setQuantity] = useState(1);
   const [actualPrice, setActualPrice] = useState(product.sellingPrice);
 
-  const potentialProfit = (product.sellingPrice - product.purchasePrice) * quantity;
-  const realProfit = (actualPrice - product.purchasePrice) * quantity;
+  const totalCost = product.purchasePrice + (product.shippingCost || 0);
+  const potentialProfit = (product.sellingPrice - totalCost) * quantity;
+  const realProfit = (actualPrice - totalCost) * quantity;
   const priceDiff = actualPrice - product.sellingPrice;
 
   const handleSubmit = (e: React.FormEvent) => {

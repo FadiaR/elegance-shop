@@ -23,9 +23,9 @@ interface Props {
 export default function Dashboard({ products, sales, settings }: Props) {
   const totalProducts = products.length;
   const totalQuantity = products.reduce((s, p) => s + p.quantity, 0);
-  const totalPurchaseEur = products.reduce((s, p) => s + p.purchasePrice * p.quantity, 0);
+  const totalCostEur = products.reduce((s, p) => s + (p.purchasePrice + (p.shippingCost || 0)) * p.quantity, 0);
   const totalSellingEur = products.reduce((s, p) => s + p.sellingPrice * p.quantity, 0);
-  const potentialProfitEur = totalSellingEur - totalPurchaseEur;
+  const potentialProfitEur = totalSellingEur - totalCostEur;
 
   // Real profit from sales
   const totalRealProfit = sales.reduce((s, sale) => s + sale.realProfit, 0);
@@ -36,8 +36,8 @@ export default function Dashboard({ products, sales, settings }: Props) {
 
   const topProfitProducts = [...products]
     .sort((a, b) => {
-      const profitA = (a.sellingPrice - a.purchasePrice) * a.quantity;
-      const profitB = (b.sellingPrice - b.purchasePrice) * b.quantity;
+      const profitA = (a.sellingPrice - a.purchasePrice - (a.shippingCost || 0)) * a.quantity;
+      const profitB = (b.sellingPrice - b.purchasePrice - (b.shippingCost || 0)) * b.quantity;
       return profitB - profitA;
     })
     .slice(0, 5);
@@ -92,8 +92,8 @@ export default function Dashboard({ products, sales, settings }: Props) {
         <StatCard
           icon={<Euro className="w-5 h-5 text-green-600" />}
           label="Investissement"
-          value={formatEUR(totalPurchaseEur)}
-          sub={formatDZD(totalPurchaseEur * settings.exchangeRate)}
+          value={formatEUR(totalCostEur)}
+          sub={formatDZD(totalCostEur * settings.exchangeRate)}
           color="bg-green-50 border-green-200"
         />
         <StatCard
@@ -188,7 +188,7 @@ export default function Dashboard({ products, sales, settings }: Props) {
           </h3>
           <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
             {topProfitProducts.map((p, i) => {
-              const profit = (p.sellingPrice - p.purchasePrice) * p.quantity;
+              const profit = (p.sellingPrice - p.purchasePrice - (p.shippingCost || 0)) * p.quantity;
               return (
                 <div key={p.id} className="flex items-center gap-3 px-3 py-2.5">
                   <span className="text-sm font-bold text-violet-600 w-5">

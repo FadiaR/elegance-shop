@@ -8,6 +8,7 @@ export interface Product {
   quantity: number;
   purchasePrice: number; // EUR
   sellingPrice: number; // EUR
+  shippingCost?: number; // EUR, frais de transport (optionnel)
   addedBy?: string;
   lastModifiedBy?: string;
   createdAt: string;
