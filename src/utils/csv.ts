@@ -62,10 +62,30 @@ export function exportProductsToCSV(products: Product[], exchangeRate: number): 
 
   const csvContent = '\uFEFF' + [headers.join(';'), ...rows].join('\n');
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const fileName = `elegance-shop-export-${new Date().toISOString().slice(0, 10)}.csv`;
+  const file = new File([blob], fileName, { type: 'text/csv;charset=utf-8;' });
+
+  // Use Web Share API on mobile (works on iPhone Safari)
+  if (navigator.share && navigator.canShare?.({ files: [file] })) {
+    navigator.share({
+      files: [file],
+      title: 'Export Elegance Shop',
+    }).catch(() => {
+      // Fallback if user cancels share
+      fallbackDownload(blob, fileName);
+    });
+  } else {
+    fallbackDownload(blob, fileName);
+  }
+}
+
+function fallbackDownload(blob: Blob, fileName: string): void {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `elegance-shop-export-${new Date().toISOString().slice(0, 10)}.csv`;
+  link.download = fileName;
+  document.body.appendChild(link);
   link.click();
-  URL.revokeObjectURL(url);
+  document.body.removeChild(link);
+  setTimeout(() => URL.revokeObjectURL(url), 100);
 }
