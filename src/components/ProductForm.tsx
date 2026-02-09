@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { Product } from '../types';
 import { Camera, ImagePlus, X, Save, ArrowLeft } from 'lucide-react';
 
@@ -21,12 +21,10 @@ export default function ProductForm({
   existingCategories,
 }: Props) {
   const navigate = useNavigate();
-  const location = useLocation();
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
-  const isEditNavigation = !!(location.state as { editing?: boolean })?.editing;
-  const isEditing = !!editProduct && isEditNavigation;
   const editIdRef = useRef<string | null>(null);
+  const isEditing = !!editProduct;
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -40,7 +38,7 @@ export default function ProductForm({
 
   // Populate form when entering edit mode - only once per product
   useEffect(() => {
-    if (editProduct && isEditNavigation && editIdRef.current !== editProduct.id) {
+    if (editProduct && editIdRef.current !== editProduct.id) {
       editIdRef.current = editProduct.id;
       setName(editProduct.name);
       setDescription(editProduct.description);
@@ -51,16 +49,22 @@ export default function ProductForm({
       setPurchasePrice(editProduct.purchasePrice);
       setSellingPrice(editProduct.sellingPrice);
       setShippingCost(editProduct.shippingCost || 0);
-    } else if (!isEditNavigation && editProduct) {
-      editIdRef.current = null;
-      onClearEdit?.();
     }
-  }, [editProduct, isEditNavigation, onClearEdit]);
+  }, [editProduct]);
+
+  // Clear editProduct when leaving the form (unmount)
+  const onClearEditRef = useRef(onClearEdit);
+  onClearEditRef.current = onClearEdit;
+  useEffect(() => {
+    return () => {
+      editIdRef.current = null;
+      onClearEditRef.current?.();
+    };
+  }, []);
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    // Resize image to avoid localStorage limits
     const reader = new FileReader();
     reader.onload = () => {
       const img = new Image();
@@ -88,7 +92,7 @@ export default function ProductForm({
     reader.readAsDataURL(file);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     const data = {
       name: name.trim(),
@@ -102,7 +106,7 @@ export default function ProductForm({
       shippingCost: shippingCost || undefined,
     };
 
-    if (isEditing && onUpdate && editProduct) {
+    if (editProduct && onUpdate) {
       onUpdate({
         ...editProduct,
         ...data,
@@ -126,7 +130,7 @@ export default function ProductForm({
     setShippingCost(0);
 
     navigate('/products');
-  };
+  }, [name, description, photo, brand, category, quantity, purchasePrice, sellingPrice, shippingCost, editProduct, onUpdate, onSave, onClearEdit, navigate]);
 
   return (
     <div className="p-4">

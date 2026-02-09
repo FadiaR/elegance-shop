@@ -329,7 +329,7 @@ export default function ProductTable({
                   <button
                     onClick={() => {
                       onEdit(product);
-                      navigate('/add', { state: { editing: true } });
+                      navigate('/add');
                     }}
                     className="flex-1 flex items-center justify-center gap-1.5 py-2 text-xs text-blue-600 hover:bg-blue-50 transition-colors"
                   >
