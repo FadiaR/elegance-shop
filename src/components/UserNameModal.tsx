@@ -1,24 +1,18 @@
 import { useState } from 'react';
-import { User, ArrowRight, AlertCircle } from 'lucide-react';
+import { User, ArrowRight } from 'lucide-react';
 
 interface Props {
   onSave: (name: string) => void;
-  isUsernameTaken: (name: string) => boolean;
 }
 
-export default function UserNameModal({ onSave, isUsernameTaken }: Props) {
+export default function UserNameModal({ onSave }: Props) {
   const [name, setName] = useState('');
-  const [error, setError] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
-    if (isUsernameTaken(name.trim())) {
-      setError('Cet utilisateur existe deja');
-      return;
+    if (name.trim()) {
+      onSave(name.trim());
     }
-    setError('');
-    onSave(name.trim());
   };
 
   return (
@@ -30,39 +24,27 @@ export default function UserNameModal({ onSave, isUsernameTaken }: Props) {
           </div>
           <h2 className="text-xl font-bold text-white">Bienvenue !</h2>
           <p className="text-violet-200 text-sm mt-1">
-            Entrez votre nom pour le suivi des stocks
+            Entrez votre prenom pour le suivi des stocks
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Votre nom
+              Votre prenom
             </label>
             <input
               type="text"
               value={name}
-              onChange={(e) => {
-                setName(e.target.value);
-                setError('');
-              }}
+              onChange={(e) => setName(e.target.value)}
               placeholder="Ex: Fadia, Ahmed..."
               autoFocus
               required
-              className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none text-gray-800 text-lg ${
-                error ? 'border-red-400' : 'border-gray-300'
-              }`}
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none text-gray-800 text-lg"
             />
-            {error ? (
-              <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
-                <AlertCircle className="w-3 h-3" />
-                {error}
-              </p>
-            ) : (
-              <p className="text-xs text-gray-400 mt-1">
-                Ce nom apparaitra dans les notifications de stock
-              </p>
-            )}
+            <p className="text-xs text-gray-400 mt-1">
+              Ce nom apparaitra dans les notifications de stock
+            </p>
           </div>
 
           <button

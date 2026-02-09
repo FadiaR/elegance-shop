@@ -56,7 +56,6 @@ export default function App() {
             setStoredUsername(name);
             setShowNameModal(false);
           }}
-          isUsernameTaken={isUsernameTaken}
         />
       )}
       {saleProduct && (
