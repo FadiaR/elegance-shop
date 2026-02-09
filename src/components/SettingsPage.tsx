@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { AppSettings } from '../types';
 import { formatDZD } from '../utils/format';
-import { Save, RefreshCw, Info, User, AlertCircle } from 'lucide-react';
+import { Save, RefreshCw, Info, User, AlertCircle, Check } from 'lucide-react';
 import { getStoredUsername, setStoredUsername } from '../hooks/useStore';
 
 interface Props {
@@ -19,18 +19,24 @@ export default function SettingsPage({ settings, onSave, isUsernameTaken, regist
   const [userName, setUserName] = useState(getStoredUsername());
   const [saved, setSaved] = useState(false);
   const [userError, setUserError] = useState('');
+  const [userSaved, setUserSaved] = useState(false);
+  const userNameChanged = userName.trim() !== '' && userName.trim() !== getStoredUsername();
+
+  const handleSaveUser = () => {
+    if (!userName.trim()) return;
+    if (isUsernameTaken(userName.trim())) {
+      setUserError('Cet utilisateur existe deja');
+      return;
+    }
+    registerUser(userName.trim());
+    setStoredUsername(userName.trim());
+    setUserError('');
+    setUserSaved(true);
+    setTimeout(() => setUserSaved(false), 2000);
+  };
 
   const handleSave = () => {
-    if (userName.trim() && userName.trim() !== getStoredUsername()) {
-      if (isUsernameTaken(userName.trim())) {
-        setUserError('Cet utilisateur existe deja');
-        return;
-      }
-      registerUser(userName.trim());
-      setStoredUsername(userName.trim());
-    }
     onSave({ exchangeRate, lowStockThreshold });
-    setUserError('');
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
@@ -76,6 +82,30 @@ export default function SettingsPage({ settings, onSave, isUsernameTaken, regist
             </p>
           )}
         </div>
+
+        <button
+          onClick={handleSaveUser}
+          disabled={!userNameChanged || userSaved}
+          className={`w-full py-2.5 rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors text-sm ${
+            userSaved
+              ? 'bg-green-600 text-white'
+              : userNameChanged
+                ? 'bg-violet-600 text-white hover:bg-violet-700'
+                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+          }`}
+        >
+          {userSaved ? (
+            <>
+              <Check className="w-4 h-4" />
+              Nom enregistre !
+            </>
+          ) : (
+            <>
+              <Save className="w-4 h-4" />
+              Enregistrer le nom
+            </>
+          )}
+        </button>
       </div>
 
       {/* Exchange rate */}

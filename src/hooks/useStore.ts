@@ -278,23 +278,44 @@ export function useStore() {
     // Remove the sale
     remove(ref(db, `sales/${saleId}`));
 
-    // Restore stock
+    const now = new Date().toISOString();
+    // Restore stock - or re-create product if it was deleted
     const product = products.find(p => p.id === sale.productId);
+    let restoredQty: number;
     if (product) {
-      const restoredQty = product.quantity + sale.quantity;
+      restoredQty = product.quantity + sale.quantity;
       set(ref(db, `products/${sale.productId}`), {
         ...product,
         quantity: restoredQty,
         lastModifiedBy: userName,
-        updatedAt: new Date().toISOString(),
+        updatedAt: now,
       });
+    } else {
+      // Product was deleted - re-create it from sale data
+      restoredQty = sale.quantity;
+      const restoredProduct: Product = {
+        id: sale.productId,
+        name: sale.productName,
+        description: '',
+        photo: '',
+        brand: sale.brand,
+        category: '',
+        quantity: restoredQty,
+        purchasePrice: sale.purchasePrice,
+        sellingPrice: sale.listedPrice,
+        addedBy: userName,
+        lastModifiedBy: userName,
+        createdAt: now,
+        updatedAt: now,
+      };
+      set(ref(db, `products/${sale.productId}`), restoredProduct);
     }
 
     addNotification({
       type: 'sale_cancelled',
       productName: sale.productName,
       productId: sale.productId,
-      newQuantity: product ? product.quantity + sale.quantity : undefined,
+      newQuantity: restoredQty,
       userName,
       message: `${userName} a annulé la vente de ${sale.quantity}x "${sale.productName}"`,
     });
