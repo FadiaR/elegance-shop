@@ -99,6 +99,7 @@ export default function App() {
                   onSave={addProduct}
                   onUpdate={updateProduct}
                   editProduct={editProduct}
+                  onClearEdit={() => setEditProduct(null)}
                   existingBrands={brands}
                   existingCategories={categories}
                 />

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import type { Product } from '../types';
 import { Camera, ImagePlus, X, Save, ArrowLeft } from 'lucide-react';
 
@@ -7,6 +7,7 @@ interface Props {
   onSave: (data: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => void;
   onUpdate?: (product: Product) => void;
   editProduct?: Product | null;
+  onClearEdit?: () => void;
   existingBrands: string[];
   existingCategories: string[];
 }
@@ -15,13 +16,16 @@ export default function ProductForm({
   onSave,
   onUpdate,
   editProduct,
+  onClearEdit,
   existingBrands,
   existingCategories,
 }: Props) {
   const navigate = useNavigate();
+  const location = useLocation();
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
-  const isEditing = !!editProduct;
+  const isEditNavigation = !!(location.state as { editing?: boolean })?.editing;
+  const isEditing = !!editProduct && isEditNavigation;
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -34,7 +38,7 @@ export default function ProductForm({
   const [shippingCost, setShippingCost] = useState(0);
 
   useEffect(() => {
-    if (editProduct) {
+    if (editProduct && isEditNavigation) {
       setName(editProduct.name);
       setDescription(editProduct.description);
       setPhoto(editProduct.photo);
@@ -44,8 +48,10 @@ export default function ProductForm({
       setPurchasePrice(editProduct.purchasePrice);
       setSellingPrice(editProduct.sellingPrice);
       setShippingCost(editProduct.shippingCost || 0);
+    } else if (!isEditNavigation && editProduct) {
+      onClearEdit?.();
     }
-  }, [editProduct]);
+  }, [editProduct, isEditNavigation, onClearEdit]);
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -100,6 +106,8 @@ export default function ProductForm({
     } else {
       onSave(data);
     }
+
+    onClearEdit?.();
 
     // Reset form
     setName('');
