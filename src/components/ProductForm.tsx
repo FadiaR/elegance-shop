@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useRef, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import type { Product } from '../types';
 import { Camera, ImagePlus, X, Save, ArrowLeft } from 'lucide-react';
 
@@ -21,6 +21,7 @@ export default function ProductForm({
   existingCategories,
 }: Props) {
   const navigate = useNavigate();
+  const location = useLocation();
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const editIdRef = useRef<string | null>(null);
@@ -35,6 +36,30 @@ export default function ProductForm({
   const [purchasePrice, setPurchasePrice] = useState(0);
   const [sellingPrice, setSellingPrice] = useState(0);
   const [shippingCost, setShippingCost] = useState(0);
+
+  // Refs to avoid stale closures
+  const onClearEditRef = useRef(onClearEdit);
+  onClearEditRef.current = onClearEdit;
+  const editProductRef = useRef(editProduct);
+  editProductRef.current = editProduct;
+
+  // When navigating to /add for adding (not editing), clear stale edit state
+  useEffect(() => {
+    const isEditNav = !!(location.state as { editing?: boolean })?.editing;
+    if (!isEditNav && editProductRef.current) {
+      editIdRef.current = null;
+      onClearEditRef.current?.();
+      setName('');
+      setDescription('');
+      setPhoto('');
+      setBrand('');
+      setCategory('');
+      setQuantity(1);
+      setPurchasePrice(0);
+      setSellingPrice(0);
+      setShippingCost(0);
+    }
+  }, [location.key]);
 
   // Populate form when entering edit mode - only once per product
   useEffect(() => {
@@ -53,8 +78,6 @@ export default function ProductForm({
   }, [editProduct]);
 
   // Clear editProduct when leaving the form (unmount)
-  const onClearEditRef = useRef(onClearEdit);
-  onClearEditRef.current = onClearEdit;
   useEffect(() => {
     return () => {
       editIdRef.current = null;
@@ -92,7 +115,7 @@ export default function ProductForm({
     reader.readAsDataURL(file);
   };
 
-  const handleSubmit = useCallback((e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const data = {
       name: name.trim(),
@@ -103,7 +126,7 @@ export default function ProductForm({
       quantity,
       purchasePrice,
       sellingPrice,
-      shippingCost: shippingCost || undefined,
+      shippingCost: shippingCost || 0,
     };
 
     if (editProduct && onUpdate) {
@@ -130,7 +153,7 @@ export default function ProductForm({
     setShippingCost(0);
 
     navigate('/products');
-  }, [name, description, photo, brand, category, quantity, purchasePrice, sellingPrice, shippingCost, editProduct, onUpdate, onSave, onClearEdit, navigate]);
+  };
 
   return (
     <div className="p-4">
