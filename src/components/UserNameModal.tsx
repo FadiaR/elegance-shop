@@ -1,18 +1,24 @@
 import { useState } from 'react';
-import { User, ArrowRight } from 'lucide-react';
+import { User, ArrowRight, AlertCircle } from 'lucide-react';
 
 interface Props {
   onSave: (name: string) => void;
+  isUsernameTaken: (name: string) => boolean;
 }
 
-export default function UserNameModal({ onSave }: Props) {
+export default function UserNameModal({ onSave, isUsernameTaken }: Props) {
   const [name, setName] = useState('');
+  const [error, setError] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (name.trim()) {
-      onSave(name.trim());
+    if (!name.trim()) return;
+    if (isUsernameTaken(name.trim())) {
+      setError('Cet utilisateur existe deja');
+      return;
     }
+    setError('');
+    onSave(name.trim());
   };
 
   return (
@@ -36,15 +42,27 @@ export default function UserNameModal({ onSave }: Props) {
             <input
               type="text"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                setName(e.target.value);
+                setError('');
+              }}
               placeholder="Ex: Fadia, Ahmed..."
               autoFocus
               required
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none text-gray-800 text-lg"
+              className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none text-gray-800 text-lg ${
+                error ? 'border-red-400' : 'border-gray-300'
+              }`}
             />
-            <p className="text-xs text-gray-400 mt-1">
-              Ce nom apparaitra dans les notifications de stock
-            </p>
+            {error ? (
+              <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                <AlertCircle className="w-3 h-3" />
+                {error}
+              </p>
+            ) : (
+              <p className="text-xs text-gray-400 mt-1">
+                Ce nom apparaitra dans les notifications de stock
+              </p>
+            )}
           </div>
 
           <button

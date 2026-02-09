@@ -12,6 +12,7 @@ import {
   Clock,
   ShoppingCart,
   Tag,
+  Undo2,
 } from 'lucide-react';
 
 interface Props {
@@ -57,6 +58,8 @@ export default function NotificationPanel({
         return <ShoppingCart className="w-4 h-4 text-orange-600" />;
       case 'price_changed':
         return <Tag className="w-4 h-4 text-purple-600" />;
+      case 'sale_cancelled':
+        return <Undo2 className="w-4 h-4 text-amber-600" />;
     }
   };
 
@@ -73,6 +76,8 @@ export default function NotificationPanel({
         return 'bg-orange-50';
       case 'price_changed':
         return 'bg-purple-50';
+      case 'sale_cancelled':
+        return 'bg-amber-50';
     }
   };
 

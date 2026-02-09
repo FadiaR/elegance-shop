@@ -24,6 +24,7 @@ export function useStore() {
   const [settings, setSettingsState] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [notifications, setNotifications] = useState<StockNotification[]>([]);
   const [sales, setSales] = useState<Sale[]>([]);
+  const [registeredUsers, setRegisteredUsers] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Real-time sync: listen to products
@@ -65,6 +66,21 @@ export function useStore() {
         setNotifications(list);
       } else {
         setNotifications([]);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Real-time sync: listen to registered users
+  useEffect(() => {
+    const usersRef = ref(db, 'users');
+    const unsubscribe = onValue(usersRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const names: string[] = Object.values(data);
+        setRegisteredUsers(names);
+      } else {
+        setRegisteredUsers([]);
       }
     });
     return () => unsubscribe();
@@ -238,16 +254,66 @@ export function useStore() {
     remove(ref(db, 'notifications'));
   }, []);
 
+  const registerUser = useCallback((name: string): boolean => {
+    const normalized = name.trim().toLowerCase();
+    const exists = registeredUsers.some(u => u.toLowerCase() === normalized);
+    if (exists) return false;
+    const key = normalized.replace(/[.#$/[\]]/g, '_');
+    set(ref(db, `users/${key}`), name.trim());
+    return true;
+  }, [registeredUsers]);
+
+  const isUsernameTaken = useCallback((name: string): boolean => {
+    const currentUser = getStoredUsername().toLowerCase();
+    const normalized = name.trim().toLowerCase();
+    if (normalized === currentUser) return false;
+    return registeredUsers.some(u => u.toLowerCase() === normalized);
+  }, [registeredUsers]);
+
+  const cancelSale = useCallback((saleId: string) => {
+    const userName = getStoredUsername() || 'Inconnu';
+    const sale = sales.find(s => s.id === saleId);
+    if (!sale) return;
+
+    // Remove the sale
+    remove(ref(db, `sales/${saleId}`));
+
+    // Restore stock
+    const product = products.find(p => p.id === sale.productId);
+    if (product) {
+      const restoredQty = product.quantity + sale.quantity;
+      set(ref(db, `products/${sale.productId}`), {
+        ...product,
+        quantity: restoredQty,
+        lastModifiedBy: userName,
+        updatedAt: new Date().toISOString(),
+      });
+    }
+
+    addNotification({
+      type: 'sale_cancelled',
+      productName: sale.productName,
+      productId: sale.productId,
+      newQuantity: product ? product.quantity + sale.quantity : undefined,
+      userName,
+      message: `${userName} a annulé la vente de ${sale.quantity}x "${sale.productName}"`,
+    });
+  }, [sales, products, addNotification]);
+
   return {
     products,
     settings,
     notifications,
     sales,
+    registeredUsers,
     loading,
     addProduct,
     updateProduct,
     deleteProduct,
     recordSale,
+    cancelSale,
+    registerUser,
+    isUsernameTaken,
     updateSettings,
     markNotificationRead,
     markAllNotificationsRead,

@@ -1,27 +1,36 @@
 import { useState } from 'react';
 import type { AppSettings } from '../types';
 import { formatDZD } from '../utils/format';
-import { Save, RefreshCw, Info, User } from 'lucide-react';
+import { Save, RefreshCw, Info, User, AlertCircle } from 'lucide-react';
 import { getStoredUsername, setStoredUsername } from '../hooks/useStore';
 
 interface Props {
   settings: AppSettings;
   onSave: (settings: AppSettings) => void;
+  isUsernameTaken: (name: string) => boolean;
+  registerUser: (name: string) => boolean;
 }
 
-export default function SettingsPage({ settings, onSave }: Props) {
+export default function SettingsPage({ settings, onSave, isUsernameTaken, registerUser }: Props) {
   const [exchangeRate, setExchangeRate] = useState(settings.exchangeRate);
   const [lowStockThreshold, setLowStockThreshold] = useState(
     settings.lowStockThreshold,
   );
   const [userName, setUserName] = useState(getStoredUsername());
   const [saved, setSaved] = useState(false);
+  const [userError, setUserError] = useState('');
 
   const handleSave = () => {
-    onSave({ exchangeRate, lowStockThreshold });
-    if (userName.trim()) {
+    if (userName.trim() && userName.trim() !== getStoredUsername()) {
+      if (isUsernameTaken(userName.trim())) {
+        setUserError('Cet utilisateur existe deja');
+        return;
+      }
+      registerUser(userName.trim());
       setStoredUsername(userName.trim());
     }
+    onSave({ exchangeRate, lowStockThreshold });
+    setUserError('');
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
@@ -51,10 +60,21 @@ export default function SettingsPage({ settings, onSave }: Props) {
           <input
             type="text"
             value={userName}
-            onChange={(e) => setUserName(e.target.value)}
+            onChange={(e) => {
+              setUserName(e.target.value);
+              setUserError('');
+            }}
             placeholder="Ex: Fadia, Ahmed..."
-            className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none text-gray-800"
+            className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none text-gray-800 ${
+              userError ? 'border-red-400' : 'border-gray-300'
+            }`}
           />
+          {userError && (
+            <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+              <AlertCircle className="w-3 h-3" />
+              {userError}
+            </p>
+          )}
         </div>
       </div>
 

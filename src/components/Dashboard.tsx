@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { Product, AppSettings, Sale } from '../types';
 import { formatEUR, formatDZD } from '../utils/format';
 import { exportProductsToCSV } from '../utils/csv';
@@ -12,15 +13,18 @@ import {
   ShoppingCart,
   User,
   Clock,
+  Undo2,
 } from 'lucide-react';
 
 interface Props {
   products: Product[];
   sales: Sale[];
   settings: AppSettings;
+  onCancelSale: (saleId: string) => void;
 }
 
-export default function Dashboard({ products, sales, settings }: Props) {
+export default function Dashboard({ products, sales, settings, onCancelSale }: Props) {
+  const [cancelConfirm, setCancelConfirm] = useState<string | null>(null);
   const totalProducts = products.length;
   const totalQuantity = products.reduce((s, p) => s + p.quantity, 0);
   const totalCostEur = products.reduce((s, p) => s + (p.purchasePrice + (p.shippingCost || 0)) * p.quantity, 0);
@@ -164,13 +168,34 @@ export default function Dashboard({ products, sales, settings }: Props) {
                       </span>
                     </div>
                   </div>
-                  <div className="text-right ml-3">
-                    <div className={`text-sm font-bold ${sale.realProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {sale.realProfit >= 0 ? '+' : ''}{formatEUR(sale.realProfit)}
+                  <div className="flex items-center gap-2 ml-3">
+                    <div className="text-right">
+                      <div className={`text-sm font-bold ${sale.realProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {sale.realProfit >= 0 ? '+' : ''}{formatEUR(sale.realProfit)}
+                      </div>
+                      <div className="text-xs text-gray-400">
+                        {formatEUR(sale.actualPrice)}/u
+                      </div>
                     </div>
-                    <div className="text-xs text-gray-400">
-                      {formatEUR(sale.actualPrice)}/u
-                    </div>
+                    <button
+                      onClick={() => {
+                        if (cancelConfirm === sale.id) {
+                          onCancelSale(sale.id);
+                          setCancelConfirm(null);
+                        } else {
+                          setCancelConfirm(sale.id);
+                          setTimeout(() => setCancelConfirm(null), 3000);
+                        }
+                      }}
+                      className={`p-1.5 rounded-lg transition-colors shrink-0 ${
+                        cancelConfirm === sale.id
+                          ? 'bg-red-600 text-white'
+                          : 'text-gray-400 hover:bg-red-50 hover:text-red-500'
+                      }`}
+                      title={cancelConfirm === sale.id ? 'Confirmer annulation' : 'Annuler cette vente'}
+                    >
+                      <Undo2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </div>
               </div>

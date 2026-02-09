@@ -32,7 +32,7 @@ export interface Sale {
 
 export interface StockNotification {
   id: string;
-  type: 'stock_added' | 'stock_updated' | 'stock_deleted' | 'product_sold' | 'price_changed';
+  type: 'stock_added' | 'stock_updated' | 'stock_deleted' | 'product_sold' | 'price_changed' | 'sale_cancelled';
   productName: string;
   productId: string;
   previousQuantity?: number;

@@ -22,6 +22,9 @@ export default function App() {
     updateProduct,
     deleteProduct,
     recordSale,
+    cancelSale,
+    registerUser,
+    isUsernameTaken,
     updateSettings,
     markNotificationRead,
     markAllNotificationsRead,
@@ -48,9 +51,11 @@ export default function App() {
       {showNameModal && (
         <UserNameModal
           onSave={(name) => {
+            registerUser(name);
             setStoredUsername(name);
             setShowNameModal(false);
           }}
+          isUsernameTaken={isUsernameTaken}
         />
       )}
       {saleProduct && (
@@ -78,7 +83,7 @@ export default function App() {
           >
             <Route
               index
-              element={<Dashboard products={products} sales={sales} settings={settings} />}
+              element={<Dashboard products={products} sales={sales} settings={settings} onCancelSale={cancelSale} />}
             />
             <Route
               path="products"
@@ -108,7 +113,7 @@ export default function App() {
             <Route
               path="settings"
               element={
-                <SettingsPage settings={settings} onSave={updateSettings} />
+                <SettingsPage settings={settings} onSave={updateSettings} isUsernameTaken={isUsernameTaken} registerUser={registerUser} />
               }
             />
           </Route>
