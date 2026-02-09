@@ -26,6 +26,7 @@ export default function ProductForm({
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const isEditNavigation = !!(location.state as { editing?: boolean })?.editing;
   const isEditing = !!editProduct && isEditNavigation;
+  const editIdRef = useRef<string | null>(null);
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -37,8 +38,10 @@ export default function ProductForm({
   const [sellingPrice, setSellingPrice] = useState(0);
   const [shippingCost, setShippingCost] = useState(0);
 
+  // Populate form when entering edit mode - only once per product
   useEffect(() => {
-    if (editProduct && isEditNavigation) {
+    if (editProduct && isEditNavigation && editIdRef.current !== editProduct.id) {
+      editIdRef.current = editProduct.id;
       setName(editProduct.name);
       setDescription(editProduct.description);
       setPhoto(editProduct.photo);
@@ -49,6 +52,7 @@ export default function ProductForm({
       setSellingPrice(editProduct.sellingPrice);
       setShippingCost(editProduct.shippingCost || 0);
     } else if (!isEditNavigation && editProduct) {
+      editIdRef.current = null;
       onClearEdit?.();
     }
   }, [editProduct, isEditNavigation, onClearEdit]);
@@ -108,6 +112,7 @@ export default function ProductForm({
     }
 
     onClearEdit?.();
+    editIdRef.current = null;
 
     // Reset form
     setName('');

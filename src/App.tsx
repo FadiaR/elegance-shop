@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { HashRouter, Routes, Route } from 'react-router-dom';
 import { useStore, getStoredUsername, setStoredUsername } from './hooks/useStore';
 import Layout from './components/Layout';
@@ -33,6 +33,7 @@ export default function App() {
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [saleProduct, setSaleProduct] = useState<Product | null>(null);
   const [showNameModal, setShowNameModal] = useState(!getStoredUsername());
+  const handleClearEdit = useCallback(() => setEditProduct(null), []);
 
   const brands = [...new Set(products.map((p) => p.brand))].filter(Boolean).sort();
   const categories = [...new Set(products.map((p) => p.category))].filter(Boolean).sort();
@@ -104,7 +105,7 @@ export default function App() {
                   onSave={addProduct}
                   onUpdate={updateProduct}
                   editProduct={editProduct}
-                  onClearEdit={() => setEditProduct(null)}
+                  onClearEdit={handleClearEdit}
                   existingBrands={brands}
                   existingCategories={categories}
                 />
