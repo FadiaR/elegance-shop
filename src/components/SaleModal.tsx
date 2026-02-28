@@ -3,6 +3,8 @@ import type { Product, AppSettings } from '../types';
 import { formatEUR, formatDZD } from '../utils/format';
 import { X, ShoppingCart, TrendingUp, TrendingDown, Minus, Plus } from 'lucide-react';
 
+type Currency = 'EUR' | 'DZD';
+
 interface Props {
   product: Product;
   settings: AppSettings;
@@ -13,11 +15,23 @@ interface Props {
 export default function SaleModal({ product, settings, onConfirm, onClose }: Props) {
   const [quantity, setQuantity] = useState(1);
   const [actualPrice, setActualPrice] = useState(product.sellingPrice);
+  const [currency, setCurrency] = useState<Currency>('DZD');
+  const [dzdPrice, setDzdPrice] = useState(Math.round(product.sellingPrice * settings.exchangeRate));
 
   const totalCost = product.purchasePrice + (product.shippingCost || 0);
   const potentialProfit = (product.sellingPrice - totalCost) * quantity;
   const realProfit = (actualPrice - totalCost) * quantity;
   const priceDiff = actualPrice - product.sellingPrice;
+
+  const handlePriceChange = (value: number, cur: Currency) => {
+    if (cur === 'EUR') {
+      setActualPrice(value);
+      setDzdPrice(Math.round(value * settings.exchangeRate));
+    } else {
+      setDzdPrice(value);
+      setActualPrice(parseFloat((value / settings.exchangeRate).toFixed(2)));
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,7 +61,7 @@ export default function SaleModal({ product, settings, onConfirm, onClose }: Pro
           {product.brand && <p className="text-xs text-violet-600">{product.brand}</p>}
           <div className="flex gap-4 mt-1 text-xs text-gray-500">
             <span>Stock: {product.quantity}</span>
-            <span>Prix affiché: {formatEUR(product.sellingPrice)}</span>
+            <span>Prix affiche: {formatEUR(product.sellingPrice)} / {formatDZD(product.sellingPrice * settings.exchangeRate)}</span>
           </div>
         </div>
 
@@ -84,22 +98,76 @@ export default function SaleModal({ product, settings, onConfirm, onClose }: Pro
             <p className="text-xs text-gray-400 mt-1">{product.quantity} disponible(s)</p>
           </div>
 
-          {/* Actual price */}
+          {/* Actual price with currency toggle */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Prix de vente reel (EUR / unite)
-            </label>
-            <input
-              type="number"
-              value={actualPrice || ''}
-              onChange={(e) => setActualPrice(Math.max(0, parseFloat(e.target.value) || 0))}
-              min={0}
-              step={0.01}
-              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none text-gray-800"
-            />
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-sm font-medium text-gray-700">
+                Prix de vente reel / unite
+              </label>
+              <div className="flex rounded-lg border border-gray-300 overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setCurrency('DZD')}
+                  className={`px-2.5 py-1 text-xs font-semibold transition-colors ${
+                    currency === 'DZD'
+                      ? 'bg-violet-600 text-white'
+                      : 'bg-white text-gray-500 hover:bg-gray-50'
+                  }`}
+                >
+                  DA
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCurrency('EUR')}
+                  className={`px-2.5 py-1 text-xs font-semibold transition-colors border-l border-gray-300 ${
+                    currency === 'EUR'
+                      ? 'bg-violet-600 text-white'
+                      : 'bg-white text-gray-500 hover:bg-gray-50'
+                  }`}
+                >
+                  EUR
+                </button>
+              </div>
+            </div>
+
+            {currency === 'DZD' ? (
+              <>
+                <div className="relative">
+                  <input
+                    type="number"
+                    value={dzdPrice || ''}
+                    onChange={(e) => handlePriceChange(Math.max(0, parseInt(e.target.value) || 0), 'DZD')}
+                    min={0}
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none text-gray-800 pr-12"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400 font-medium">DA</span>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  = {formatEUR(actualPrice)}
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="relative">
+                  <input
+                    type="number"
+                    value={actualPrice || ''}
+                    onChange={(e) => handlePriceChange(Math.max(0, parseFloat(e.target.value) || 0), 'EUR')}
+                    min={0}
+                    step={0.01}
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none text-gray-800 pr-12"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400 font-medium">EUR</span>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  = {formatDZD(actualPrice * settings.exchangeRate)}
+                </p>
+              </>
+            )}
+
             {priceDiff !== 0 && (
               <p className={`text-xs mt-1 ${priceDiff > 0 ? 'text-green-600' : 'text-red-500'}`}>
-                {priceDiff > 0 ? '+' : ''}{priceDiff.toFixed(2)} EUR vs prix affiché
+                {priceDiff > 0 ? '+' : ''}{priceDiff.toFixed(2)} EUR vs prix affiche
               </p>
             )}
           </div>

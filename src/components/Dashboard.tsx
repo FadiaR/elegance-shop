@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { Product, AppSettings, Sale } from '../types';
 import { formatEUR, formatDZD } from '../utils/format';
 import { exportProductsToCSV } from '../utils/csv';
@@ -24,6 +25,7 @@ interface Props {
 }
 
 export default function Dashboard({ products, sales, settings, onCancelSale }: Props) {
+  const navigate = useNavigate();
   const [cancelConfirm, setCancelConfirm] = useState<string | null>(null);
   const totalProducts = products.length;
   const totalQuantity = products.reduce((s, p) => s + p.quantity, 0);
@@ -145,10 +147,18 @@ export default function Dashboard({ products, sales, settings, onCancelSale }: P
       {/* Recent sales */}
       {recentSales.length > 0 && (
         <div className="space-y-2">
-          <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide flex items-center gap-2">
-            <ShoppingCart className="w-4 h-4" />
-            Dernieres ventes
-          </h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide flex items-center gap-2">
+              <ShoppingCart className="w-4 h-4" />
+              Dernieres ventes
+            </h3>
+            <button
+              onClick={() => navigate('/sales')}
+              className="text-xs text-violet-600 font-medium hover:text-violet-800"
+            >
+              Voir tout ({sales.length})
+            </button>
+          </div>
           <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
             {recentSales.map((sale) => (
               <div key={sale.id} className="px-3 py-2.5">

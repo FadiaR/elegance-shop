@@ -5,6 +5,7 @@ import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import ProductForm from './components/ProductForm';
 import ProductTable from './components/ProductTable';
+import SalesHistory from './components/SalesHistory';
 import SettingsPage from './components/SettingsPage';
 import UserNameModal from './components/UserNameModal';
 import SaleModal from './components/SaleModal';
@@ -108,6 +109,12 @@ export default function App() {
                   existingBrands={brands}
                   existingCategories={categories}
                 />
+              }
+            />
+            <Route
+              path="sales"
+              element={
+                <SalesHistory sales={sales} settings={settings} onCancelSale={cancelSale} />
               }
             />
             <Route

@@ -3,15 +3,17 @@ import {
   LayoutDashboard,
   PackagePlus,
   PackageSearch,
+  Receipt,
   Settings,
 } from 'lucide-react';
 import type { StockNotification } from '../types';
 import NotificationPanel from './NotificationPanel';
 
 const navItems = [
-  { to: '/', icon: LayoutDashboard, label: 'Tableau de bord' },
+  { to: '/', icon: LayoutDashboard, label: 'Accueil' },
   { to: '/products', icon: PackageSearch, label: 'Inventaire' },
   { to: '/add', icon: PackagePlus, label: 'Ajouter' },
+  { to: '/sales', icon: Receipt, label: 'Ventes' },
   { to: '/settings', icon: Settings, label: 'Reglages' },
 ];
 
