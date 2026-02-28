@@ -114,7 +114,7 @@ export default function SaleModal({ product, settings, onConfirm, onClose }: Pro
                       : 'bg-white text-gray-500 hover:bg-gray-50'
                   }`}
                 >
-                  DA
+                  DZN
                 </button>
                 <button
                   type="button"
@@ -140,7 +140,7 @@ export default function SaleModal({ product, settings, onConfirm, onClose }: Pro
                     min={0}
                     className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none text-gray-800 pr-12"
                   />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400 font-medium">DA</span>
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400 font-medium">DZN</span>
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
                   = {formatEUR(actualPrice)}
